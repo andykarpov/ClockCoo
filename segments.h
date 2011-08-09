@@ -1,0 +1,90 @@
+// the 8 arrays that form each segment of the custom numbers
+byte SEGMENT_FULL[8] =
+{
+  B11111,
+  B11111,
+  B11111,
+  B11111,
+  B11111,
+  B11111,
+  B11111,
+  B11111
+};
+byte SEGMENT_HALF_TOP[8] =
+{
+  B11111,
+  B11111,
+  B11111,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000
+};
+byte SEGMENT_HALF_BOTTOM[8] =
+{
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B11111,
+  B11111,
+  B11111
+};
+byte SEGMENT_MIDDLE1[8] =
+{
+  B11111,
+  B11111,
+  B11111,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B11111
+};
+byte SEGMENT_MIDDLE2[8] =
+{
+  B11111,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B11111,
+  B11111,
+  B11111
+};
+byte SEGMENT_DOT_LEFT[8] =
+{
+  B00000,
+  B00000,
+  B00001,
+  B00011,
+  B00011,
+  B00001,
+  B00000,
+  B00000
+};
+byte SEGMENT_DOT_RIGHT[8] =
+{
+  B00000,
+  B00000,
+  B10000,
+  B11000,
+  B11000,
+  B10000,
+  B00000,
+  B00000
+};
+byte SEGMENT_CLEAR[8] =
+{
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000
+};
+
