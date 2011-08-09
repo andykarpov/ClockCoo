@@ -2,7 +2,7 @@
  * ClockCoo
  *
  * Arduino based LCD clock with temperature sensor and bell / coocoo support.
- * Uses DS1307 RTC, Dallas 1 wire temperature sensor, 16x2 LCD and SD card module. 
+ * Uses Arduino Nano (Atmega328), DS1307 RTC, Dallas 1 wire temperature sensor, 16x2 LCD and SD card module. 
  *
  * Copyright (C) 2011 Andrey Karpov <andy.karpov@gmail.com>
  */
@@ -61,7 +61,6 @@ long curTime = 0; // current time (timestamp)
 long lastPush = 0; // last pushed settings button (timestamp)
 int lastSec = 0; // last second value
 boolean dotsOn = false; // current dots on / off flag
-uint8_t tracknum = 0; // sd card file number
 int mode = 0; // 0 - time, 1 - temperature, 2 - text mode
 int lastMode = 0; // last mode
 
@@ -85,15 +84,21 @@ void setup() {
   // set button pins
   pinMode(BTN_HOURS_PIN, INPUT);
   pinMode(BTN_MINUTES_PIN, INPUT);
+  pinMode(BTN_MODE_PIN, INPUT);
+  
+  // turn on internal pullups
   digitalWrite(BTN_HOURS_PIN, HIGH);
   digitalWrite(BTN_MINUTES_PIN, HIGH);
+  digitalWrite(BTN_MODE_PIN, HIGH);
   
-  // set speaker and mem pins
+  // set speaker pin
   pinMode(SPK_PIN, OUTPUT);
+  
+  // set one unused digital pin :)
   pinMode(MEM_PW, OUTPUT);
   digitalWrite(MEM_PW, HIGH);
   
-  // sets the LCD's rows and colums
+  // init LCD's rows and colums
   lcd.begin(16, 2);
  
   // assignes each segment a write number
@@ -109,22 +114,28 @@ void setup() {
   // one wire temp sensors start
   sensors.begin();
     
+  // trying to init SD card
   if (!card.init_card()) {
     lcd.print("ERR INIT CARD");
     return;
   }
+  
+  // trying to open partition
   if (!card.open_partition()) {
     lcd.print("ERR OPEN PART");
     return;
   }
+  
+  // trying to open filesystem
   if (!card.open_filesys()) {
     lcd.print("ERR OPEN FS");
     return;
   }
 
- if (!card.open_rootdir()) {
-   lcd.print("ERR OPEN ROOT");
-   return;
+  // trying to open root dir
+  if (!card.open_rootdir()) {
+    lcd.print("ERR OPEN ROOT");
+    return;
   }
 }
 
@@ -181,6 +192,8 @@ void loop() {
   // check if need to play a sound and play it
   // in any mode
   processSounds();
+  
+  // just a small delay
   delay(200);
 }
 
