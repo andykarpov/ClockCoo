@@ -45,11 +45,11 @@ char file_kuku[13] = "01KUKU.WAV"; // coocoo sound
 char file_chime[13] = "02CHIME.WAV"; // westmine chime sound
 
 // pin definitions
-#define MEM_PW 8 // reserved by SPI / SD Card
+//#define MEM_PW 8 // reserved by SPI / SD Card
 #define SPK_PIN 3 // speaker
 #define BTN_HOURS_PIN 6 // settings - hours pin
 #define BTN_MINUTES_PIN 7 // settings - minutes pin
-#define BTN_MODE_PIN 18 // mode pin (A6)
+#define BTN_MODE_PIN 8 // mode pin 
 
 // variables
 int seconds; // current seconds
@@ -95,8 +95,8 @@ void setup() {
   pinMode(SPK_PIN, OUTPUT);
   
   // set one unused digital pin :)
-  pinMode(MEM_PW, OUTPUT);
-  digitalWrite(MEM_PW, HIGH);
+  //pinMode(MEM_PW, OUTPUT);
+  //digitalWrite(MEM_PW, HIGH);
   
   // init LCD's rows and colums
   lcd.begin(16, 2);
@@ -157,11 +157,7 @@ void loop() {
   seconds = RTC.getSeconds();
   minutes = RTC.getMinutes();
   hours = RTC.getHours();
-  
-  // read temperature
-  sensors.requestTemperatures();
-  temperature = sensors.getTempCByIndex(0);
-  
+    
   // current (internal) timestamp
   curTime = millis();
 
@@ -181,11 +177,17 @@ void loop() {
       processTimeAdjustment(); // check if set time buttons pressed and adjust time
     break;
     case 1:
+      // read temperature
+      sensors.requestTemperatures();
+      temperature = sensors.getTempCByIndex(0);
       printTemperature(temperature); // print temparature
     break;
     case 2:
+      // read temperature
+      sensors.requestTemperatures();
+      temperature = sensors.getTempCByIndex(0);
       printTextInfo(); // print both time and temperature in text mode
-      processTimeAdjustment();
+      //processTimeAdjustment();
     break;
   }
 
@@ -317,7 +319,7 @@ void printTemperature(float t) {
   }
   lcd.setCursor(7,1);
   lcd.print(".");
-  lcd.setCursor(12,0);
+  lcd.setCursor(11,0);
   lcd.write(5);
   lcd.print("C");
 }
@@ -542,10 +544,14 @@ void printTextInfo() {
   lcd.print(":");
   if (minutes < 10) lcd.print("0");
   lcd.print(minutes);
+  lcd.print(":");
+  if (seconds < 10) lcd.print("0");
+  lcd.print(seconds);
   
   lcd.setCursor(0,1);
   lcd.print("Temp: ");
   lcd.print(temperature);
+  lcd.print(" ");
   lcd.write(5);
   lcd.print("C");
 }
