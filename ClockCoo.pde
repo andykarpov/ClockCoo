@@ -483,8 +483,12 @@ void playfile(char *name) {
  * @return void
  */
 void processSounds() {
-    if ((hours > 7 && hours < 21) && (minutes % 15 == 0) && (seconds == 0) && (curTime-lastPush > 5000)) {
-     if (minutes == 0) {
+    if ((hours > 7 && hours < 21) && (minutes == 0) && (seconds == 0) && (curTime-lastPush > 5000)) {
+    char filename[12];
+    sprintf(filename, "%d.WAV", hours);
+    playfile(filename);
+    
+/*      if (minutes == 0) {
         int times = hours;
         if(times > 12) {
           times = times - 12;
@@ -493,9 +497,8 @@ void processSounds() {
            playfile(file_kuku);
            times--;
         }
-     } else {
-        playfile(file_chime);
      }
+*/
   }
 }
 
