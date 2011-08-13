@@ -47,9 +47,9 @@ char file_chime[13] = "02CHIME.WAV"; // westmine chime sound
 // pin definitions
 //#define MEM_PW 8 // reserved by SPI / SD Card
 #define SPK_PIN 3 // speaker
-#define BTN_HOURS_PIN 6 // settings - hours pin
-#define BTN_MINUTES_PIN 7 // settings - minutes pin
-#define BTN_MODE_PIN 8 // mode pin 
+#define BTN_HOURS_PIN 7 // settings - hours pin
+#define BTN_MINUTES_PIN 8 // settings - minutes pin
+#define BTN_MODE_PIN 6 // mode pin 
 
 // variables
 int seconds; // current seconds
