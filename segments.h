@@ -10,6 +10,7 @@ byte SEGMENT_FULL[8] =
   B11111,
   B11111
 };
+
 byte SEGMENT_HALF_TOP[8] =
 {
   B11111,
@@ -21,6 +22,7 @@ byte SEGMENT_HALF_TOP[8] =
   B00000,
   B00000
 };
+
 byte SEGMENT_HALF_BOTTOM[8] =
 {
   B00000,
@@ -32,6 +34,7 @@ byte SEGMENT_HALF_BOTTOM[8] =
   B11111,
   B11111
 };
+
 byte SEGMENT_MIDDLE1[8] =
 {
   B11111,
@@ -43,6 +46,7 @@ byte SEGMENT_MIDDLE1[8] =
   B00000,
   B11111
 };
+
 byte SEGMENT_MIDDLE2[8] =
 {
   B11111,
@@ -54,6 +58,7 @@ byte SEGMENT_MIDDLE2[8] =
   B11111,
   B11111
 };
+
 byte SEGMENT_DOT_LEFT[8] =
 {
   B00000,
@@ -65,6 +70,7 @@ byte SEGMENT_DOT_LEFT[8] =
   B00000,
   B00000
 };
+
 byte SEGMENT_DOT_RIGHT[8] =
 {
   B00000,
@@ -76,6 +82,7 @@ byte SEGMENT_DOT_RIGHT[8] =
   B00000,
   B00000
 };
+
 byte SEGMENT_CLEAR[8] =
 {
   B00000,
@@ -88,3 +95,14 @@ byte SEGMENT_CLEAR[8] =
   B00000
 };
 
+byte SEGMENT_DEGREE[8] =
+{
+  B00110,
+  B01001,
+  B01001,
+  B00110,
+  B00000,
+  B00000,
+  B00000,
+  B00000
+};

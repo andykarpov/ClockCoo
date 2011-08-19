@@ -1,5 +1,5 @@
 /*
- * ClockCoo
+ * ClockCoo v1.1
  *
  * Arduino based LCD clock with temperature sensor and bell / coocoo support.
  * Uses Arduino Nano (Atmega328), DS1307 RTC, Dallas 1 wire temperature sensor, 16x2 LCD and SD card module. 
@@ -7,25 +7,15 @@
  * Copyright (C) 2011 Andrey Karpov <andy.karpov@gmail.com>
  */
 
-#include <SDplayWAV.h>
-#include <fat16.h>
-#include <fat16_config.h>
-#include <partition.h>
-#include <partition_config.h>
-#include <sd-reader_config.h>
-#include <sd_raw.h>
-#include <sd_raw_config.h>
-#include <util.h>
-#include <wave.h>
-#include <avr/pgmspace.h>
 #include <LiquidCrystal.h>
-#include <stdio.h>
-#include <avr/pgmspace.h>
 #include <WProgram.h>
 #include <Wire.h>
 #include <RealTimeClockDS1307.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <WaveBit.h>
+#include <WaveUtil.h>
+#include "segments.h"
 
 // init LCD
 LiquidCrystal lcd(14, 15, 16, 5, 4, 17, 2); // A0, A1, A2, D5, D4, A3, D2
@@ -36,16 +26,17 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 // init wave playback from SD card
-AF_Wave card;
-File f;
-Wavefile wave;
+SdReader card;
+FatVolume vol;
+FatReader root;
+FatReader file;
+WaveBit wave;
 
 // wave filenames
 char file_kuku[13] = "01KUKU.WAV"; // coocoo sound
 char file_chime[13] = "02CHIME.WAV"; // westmine chime sound
 
 // pin definitions
-//#define MEM_PW 8 // reserved by SPI / SD Card
 #define SPK_PIN 3 // speaker
 #define BTN_HOURS_PIN 7 // settings - hours pin
 #define BTN_MINUTES_PIN 8 // settings - minutes pin
@@ -63,17 +54,6 @@ int lastSec = 0; // last second value
 boolean dotsOn = false; // current dots on / off flag
 int mode = 0; // 0 - time, 1 - temperature, 2 - text mode
 int lastMode = 0; // last mode
-
-// custom characters for big digits
-byte SEGMENT_FULL[8] = {B11111, B11111, B11111, B11111, B11111, B11111, B11111, B11111};
-byte SEGMENT_HALF_TOP[8] = {B11111,B11111,B11111,B00000,B00000,B00000,B00000,B00000};
-byte SEGMENT_HALF_BOTTOM[8] = {B00000,B00000,B00000,B00000,B00000,B11111,B11111,B11111};
-byte SEGMENT_MIDDLE1[8] = {B11111,B11111,B11111,B00000,B00000,B00000,B00000,B11111};
-byte SEGMENT_MIDDLE2[8] = {B11111,B00000,B00000,B00000,B00000,B11111,B11111,B11111};
-byte SEGMENT_DOT_LEFT[8] = {B00000,B00000,B00001,B00011,B00011,B00001,B00000,B00000};
-byte SEGMENT_DOT_RIGHT[8] = {B00000,B00000,B10000,B11000,B11000,B10000,B00000,B00000};
-byte SEGMENT_CLEAR[8] = {B00000,B00000,B00000,B00000,B00000,B00000,B00000,B00000};
-byte SEGMENT_DEGREE[8] = {B00110,B01001,B01001,B00110,B00000,B00000,B00000,B00000};
 
 /*
  * Setup routine
@@ -94,10 +74,6 @@ void setup() {
   // set speaker pin
   pinMode(SPK_PIN, OUTPUT);
   
-  // set one unused digital pin :)
-  //pinMode(MEM_PW, OUTPUT);
-  //digitalWrite(MEM_PW, HIGH);
-  
   // init LCD's rows and colums
   lcd.begin(16, 2);
  
@@ -114,28 +90,38 @@ void setup() {
   // one wire temp sensors start
   sensors.begin();
     
+  // free ram
+  FreeRam(); 
+  
   // trying to init SD card
-  if (!card.init_card()) {
+  if (!card.init()) {
     lcd.print("ERR INIT CARD");
     return;
   }
+  // enable optimize read - some cards may timeout. 
+  card.partialBlockRead(true);
   
-  // trying to open partition
-  if (!card.open_partition()) {
-    lcd.print("ERR OPEN PART");
+  // Now we will look for a FAT partition!
+  uint8_t part;
+  // we have up to 5 slots to look in
+  for (part = 0; part < 5; part++) {   
+    if (vol.init(card, part)) 
+      // we found one, lets bail
+      break;
+  }
+  
+  if (part == 5) {                     
+    // if we ended up not finding one  :(
+    // Something went wrong, lets print out why
+    lcd.print("ERR NO FAT!");
     return;
   }
   
-  // trying to open filesystem
-  if (!card.open_filesys()) {
-    lcd.print("ERR OPEN FS");
-    return;
-  }
-
-  // trying to open root dir
-  if (!card.open_rootdir()) {
-    lcd.print("ERR OPEN ROOT");
-    return;
+  // Try to open the root directory
+  if (!root.openRoot(vol)) {
+    // Something went wrong
+    lcd.print("Can't open root dir!");
+    return;    
   }
 }
 
@@ -457,14 +443,13 @@ void printDots(boolean on)
  * @return void
  */
 void playfile(char *name) {
-   f = card.open_file(name);
-   if (!f) {
+   if (!file.open(root, name)) {
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("ERR OPEN FILE");
       return;
    }
-   if (!wave.create(f)) {
+   if (!wave.create(file)) {
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("ERR OPEN WAV");
@@ -474,7 +459,6 @@ void playfile(char *name) {
    while(wave.isplaying) {
       delay(100);
    }
-   card.close_file(f);
    digitalWrite(SPK_PIN, LOW);
 }
 
@@ -483,12 +467,11 @@ void playfile(char *name) {
  * @return void
  */
 void processSounds() {
-    if ((hours > 7 && hours < 21) && (minutes == 0) && (seconds == 0) && (curTime-lastPush > 5000)) {
-    char filename[12];
-    sprintf(filename, "%d.WAV", hours);
-    playfile(filename);
-    
-/*      if (minutes == 0) {
+    if ((hours >= 8 && hours <= 21) && (minutes % 15 == 0) && (seconds == 0) && (curTime-lastPush > 5000)) {
+
+      // every hour play N times coo-cooo
+      // and say time after that
+      if (minutes == 0) {
         int times = hours;
         if(times > 12) {
           times = times - 12;
@@ -497,8 +480,16 @@ void processSounds() {
            playfile(file_kuku);
            times--;
         }
+        char filename[12];
+        sprintf(filename, "%d.WAV", hours);
+        playfile(filename);
+     
+     } 
+     // every 15 minutes play chime
+     else if (hours < 21) {
+       playfile(file_chime);
      }
-*/
+
   }
 }
 
@@ -539,6 +530,11 @@ void processTimeAdjustment() {
   }
 }
 
+/**
+ * Print temperature and time in text format
+ *
+ * @return void
+ */
 void printTextInfo() {
   lcd.setCursor(0,0);
   lcd.print("Time: ");
