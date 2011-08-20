@@ -7,15 +7,15 @@
  * Copyright (C) 2011 Andrey Karpov <andy.karpov@gmail.com>
  */
 
-#include <LiquidCrystal.h>
-#include <WProgram.h>
-#include <Wire.h>
+#include <LiquidCrystal.h> // standard library
+#include <WProgram.h> // standard library
+#include <Wire.h> // standard library
 #include <RealTimeClockDS1307.h> // RealTimeClockDS1307 library: https://github.com/davidhbrown/RealTimeClockDS1307.git
 #include <OneWire.h> // OneWire library: http://www.pjrc.com/teensy/td_libs_OneWire.html
 #include <DallasTemperature.h> // DallasTemperature library: http://milesburton.com/index.php?title=Dallas_Temperature_Control_Library
-#include <WaveBit.h>  // WaveHC library http://code.google.com/p/wavehc/ . we uses modified WaveHC library that produce sound from D3 PWM pin instead of 12-bit DAC. Please patch WaveHC library with included patch
-#include <WaveUtil.h> // WaveHC library
-#include "segments.h"
+#include <WaveBit.h>  // WaveBit library: https://github.com/andykarpov/WaveBit
+#include <WaveUtil.h> // WaveBit library helper routines
+#include "segments.h" // custom characters definition
 
 // init LCD
 LiquidCrystal lcd(14, 15, 16, 5, 4, 17, 2); // A0, A1, A2, D5, D4, A3, D2
