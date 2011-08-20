@@ -1,0 +1,40 @@
+diff -rupN /Users/andy/Downloads/WaveHC/WaveHC.cpp WaveHC/WaveHC.cpp
+--- /Users/andy/Downloads/WaveHC/WaveHC.cpp	2011-01-31 11:38:12.000000000 +0200
++++ WaveHC/WaveHC.cpp	2011-08-20 01:45:39.000000000 +0300
+@@ -89,6 +89,8 @@ ISR(TIMER1_COMPA_vect) {
+   dl = tmp;
+ #endif //DVOLUME
+ 
++
++#if USE_DAC
+   // dac chip select low
+   mcpDacCsLow();
+   
+@@ -118,6 +120,13 @@ ISR(TIMER1_COMPA_vect) {
+   
+   // chip select high - done
+   mcpDacCsHigh();
++#else
++    // play sound using PWM pin
++    cli();
++    OCR2B = dh;
++    sei();
++#endif // USE_DAC
++  
+ 
+ }
+ //------------------------------------------------------------------------------
+diff -rupN /Users/andy/Downloads/WaveHC/WavePinDefs.h WaveHC/WavePinDefs.h
+--- /Users/andy/Downloads/WaveHC/WavePinDefs.h	2010-04-17 09:30:52.000000000 +0300
++++ WaveHC/WavePinDefs.h	2011-08-20 01:42:01.000000000 +0300
+@@ -21,6 +21,10 @@
+ 
+ /** SPI serial clock pin. */
+ #define SCK  SCK_PIN
++
++/** Use DAC or not - then PWM pin 3 will be used to output sounds */
++#define USE_DAC 0
++
+ 
+ //------------------------------------------------------------------------------
+ // DAC pin definitions

@@ -1,7 +1,7 @@
 /*
- * ClockCoo v1.1
+ * ClockCoo v1.2
  *
- * Arduino based LCD clock with temperature sensor and bell / coocoo support.
+ * Arduino based funny LCD clock with temperature sensor and chime / coocoo sounds.
  * Uses Arduino Nano (Atmega328), DS1307 RTC, Dallas 1 wire temperature sensor, 16x2 LCD and SD card module. 
  *
  * Copyright (C) 2011 Andrey Karpov <andy.karpov@gmail.com>
@@ -10,11 +10,11 @@
 #include <LiquidCrystal.h>
 #include <WProgram.h>
 #include <Wire.h>
-#include <RealTimeClockDS1307.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
-#include <WaveBit.h>
-#include <WaveUtil.h>
+#include <RealTimeClockDS1307.h> // RealTimeClockDS1307 library: https://github.com/davidhbrown/RealTimeClockDS1307.git
+#include <OneWire.h> // OneWire library: http://www.pjrc.com/teensy/td_libs_OneWire.html
+#include <DallasTemperature.h> // DallasTemperature library: http://milesburton.com/index.php?title=Dallas_Temperature_Control_Library
+#include <WaveHC.h>  // WaveHC library http://code.google.com/p/wavehc/ . we uses modified WaveHC library that produce sound from D3 PWM pin instead of 12-bit DAC. Please patch WaveHC library with included patch
+#include <WaveUtil.h> // WaveHC library
 #include "segments.h"
 
 // init LCD
@@ -30,7 +30,7 @@ SdReader card;
 FatVolume vol;
 FatReader root;
 FatReader file;
-WaveBit wave;
+WaveHC wave;
 
 // wave filenames
 char file_kuku[13] = "01KUKU.WAV"; // coocoo sound
@@ -113,14 +113,14 @@ void setup() {
   if (part == 5) {                     
     // if we ended up not finding one  :(
     // Something went wrong, lets print out why
-    lcd.print("ERR NO FAT!");
+    lcd.print("ERR NO FAT");
     return;
   }
   
   // Try to open the root directory
   if (!root.openRoot(vol)) {
     // Something went wrong
-    lcd.print("Can't open root dir!");
+    lcd.print("ERR CARD ROOT");
     return;    
   }
 }
@@ -150,7 +150,6 @@ void loop() {
   // mode button pressed
   if (digitalRead(BTN_MODE_PIN) == LOW) {
      switchMode(mode);
-     delay(100);
      tone(SPK_PIN, 2500, 100);
      delay(100);
   }
@@ -316,109 +315,31 @@ void printTemperature(float t) {
  * @return void
  */
 void printDigit(int digit) {
-   switch (digit) {
-       case 9:
-          lcd.setCursor(x,0);
-          lcd.write(0);
-          lcd.write(3);
-          lcd.write(0);
-          lcd.setCursor(x, 1);
-          lcd.write(4);
-          lcd.write(4);
-          lcd.write(0);
-       break;
-       case 8:
-          lcd.setCursor(x,0);
-          lcd.write(0);
-          lcd.write(3);
-          lcd.write(0);
-          lcd.setCursor(x, 1);
-          lcd.write(0);
-          lcd.write(4);
-          lcd.write(0);
-       break;
-       case 7:
-          lcd.setCursor(x,0);
-          lcd.write(1);
-          lcd.write(1);
-          lcd.write(0);
-          lcd.setCursor(x, 1);
-          lcd.write(7);
-          lcd.write(0);
-          lcd.write(7);
-       break;
-       case 6:
-          lcd.setCursor(x,0);
-          lcd.write(0);
-          lcd.write(3);
-          lcd.write(3);
-          lcd.setCursor(x, 1);
-          lcd.write(0);
-          lcd.write(4);
-          lcd.write(0);
-       break;
-       case 5:
-          lcd.setCursor(x,0);
-          lcd.write(0);
-          lcd.write(3);
-          lcd.write(3);
-          lcd.setCursor(x, 1);
-          lcd.write(4);
-          lcd.write(4);
-          lcd.write(0);
-       break;
-       case 4:
-          lcd.setCursor(x,0);
-          lcd.write(0);
-          lcd.write(2);
-          lcd.write(0);
-          lcd.setCursor(x, 1);
-          lcd.write(7);
-          lcd.write(7);
-          lcd.write(0);
-       break;
-       case 3:
-          lcd.setCursor(x,0);
-          lcd.write(3);
-          lcd.write(3);
-          lcd.write(0);
-          lcd.setCursor(x, 1);
-          lcd.write(4);
-          lcd.write(4);
-          lcd.write(0);
-       break;
-       case 2:
-          lcd.setCursor(x,0);
-          lcd.write(3);
-          lcd.write(3);
-          lcd.write(0);
-          lcd.setCursor(x, 1);
-          lcd.write(0);
-          lcd.write(4);
-          lcd.write(4);
-       break;
-       case 1:
-          lcd.setCursor(x,0);
-          lcd.write(1);
-          lcd.write(0);
-          lcd.write(7);
-          lcd.setCursor(x, 1);
-          lcd.write(2);
-          lcd.write(0);
-          lcd.write(2);
-       break;
-       case 0:
-          lcd.setCursor(x, 0); 
-          lcd.write(0);  
-          lcd.write(1);  
-          lcd.write(0);
-          lcd.setCursor(x, 1); 
-          lcd.write(0);  
-          lcd.write(2);  
-          lcd.write(0);
-       break;
+  byte digits[10][6] = {
+    {0,1,0, 0,2,0}, // 0
+    {1,0,7, 2,0,2}, // 1
+    {3,3,0, 0,4,4}, // 2
+    {3,3,0, 4,4,0}, // 3
+    {0,2,0, 7,7,0}, // 4
+    {0,3,3, 4,4,0}, // 5
+    {0,3,3, 0,4,0}, // 6
+    {1,1,0, 7,0,7}, // 7
+    {0,3,0, 0,4,0}, // 8
+    {0,3,0, 4,4,0}, // 9    
+  };
+  
+  
+  byte i;
+  for (i=0; i<6; i++) {
+    if (i==0) lcd.setCursor(x, 0);
+    if (i==3) lcd.setCursor(x, 1);
+    if (digit >=0 && digit <=9) {
+      lcd.write(digits[digit][i]);
+    } else {
+      lcd.write(7); // empty
     }
-    x = x+4;
+  }
+  x = x+4;
 }
 
 /**
