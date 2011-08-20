@@ -55,6 +55,9 @@ boolean dotsOn = false; // current dots on / off flag
 int mode = 0; // 0 - time, 1 - temperature, 2 - text mode
 int lastMode = 0; // last mode
 
+char say_time_files[10][12]; // array of files to say time
+byte say_time_num = 0; // real length of the array of files
+
 /*
  * Setup routine
  * @return void
@@ -393,6 +396,13 @@ void processSounds() {
       // every hour play N times coo-cooo
       // and say time after that
       if (minutes == 0) {
+
+        // say Nikita sound
+        char filename[12];
+        sprintf(filename, "NIK_%d.WAV", hours);
+        playfile(filename);
+
+        // play coocoo N times
         int times = hours;
         if(times > 12) {
           times = times - 12;
@@ -401,16 +411,18 @@ void processSounds() {
            playfile(file_kuku);
            times--;
         }
-        char filename[12];
-        sprintf(filename, "%d.WAV", hours);
-        playfile(filename);
+        
+        // say time, finally
+        sayTime();
      
      } 
      // every 15 minutes play chime
      else if (hours < 21) {
+       // play chime
        playfile(file_chime);
+        // say time, finally
+        sayTime();
      }
-
   }
 }
 
@@ -474,4 +486,116 @@ void printTextInfo() {
   lcd.print(" ");
   lcd.write(5);
   lcd.print("C");
+}
+
+void sayTime() {
+   byte i=0;
+   
+   // cleanup array
+   for (i=0; i<11; i++) {
+     sprintf(say_time_files[i], "");
+   }
+
+   int h1,h2 = 0;
+   int m1,m2 = 0;
+   
+   h1 = hours/10 - (hours/100)*10;
+   h2 = hours/1 - (hours/10)*10;
+   
+   m1 = minutes/10 - (minutes/100)*10;
+   m2 = minutes/1 - (minutes/10)*10;
+   
+   say_time_num=0;
+   sprintf(say_time_files[say_time_num], "VREMJA.WAV");
+   say_time_num++;
+   getFilesToSayDigits(h1,h2,3);
+   getFilesToSayHours(h1,h2);
+   getFilesToSayDigits(m1,m2,2);
+   getFilesToSayMinutes(m1,m2);
+   for (i=0; i<say_time_num; i++) {
+     playfile(say_time_files[i]);
+   }
+}
+
+void getFilesToSayDigits(int m2, int m3, int flag) {
+  if( m2 == 0 || m2 > 1 )
+  {
+    sprintf(say_time_files[say_time_num], "%d0.WAV", m2);
+    say_time_num++;
+    sprintf(say_time_files[say_time_num], "%d%s.WAV", m3, (flag==2 && (m3==1 || m3==2))?"F":"");
+    say_time_num++;
+  }
+  else if( m2 == 1 )
+  {
+    sprintf(say_time_files[say_time_num], "%d.WAV", m3+10);
+    say_time_num++;
+  }    
+}
+
+void getFilesToSayHours(int m2, int m3) {
+  if( m3 == 0 && m2 == 0) {
+    // ноль часов
+    sprintf(say_time_files[say_time_num], "%d.WAV", 0);
+    say_time_num++;
+    sprintf(say_time_files[say_time_num], "HOURS.WAV");
+    say_time_num++;
+  }
+  else if( m2 == 1 )
+  {
+    // часов
+    sprintf(say_time_files[say_time_num], "HOURS.WAV");
+    say_time_num++;
+  }
+  else
+  {
+    if( m3 == 1 ) {
+      //час 
+      sprintf(say_time_files[say_time_num], "HOUR.WAV");
+      say_time_num++;
+    }
+     else if( m3 >= 2 && m3 <= 4 ) {
+       //часа 
+        sprintf(say_time_files[say_time_num], "HOUR-A.WAV");
+        say_time_num++;
+     }
+     else {
+      //часов
+      sprintf(say_time_files[say_time_num], "HOURS.WAV");
+      say_time_num++;
+    }
+  }
+}
+
+void getFilesToSayMinutes(int m2, int m3) {
+  if( m3 == 0 && m2 == 0) {
+    // ноль минут
+    sprintf(say_time_files[say_time_num], "%d.WAV", 0);
+    say_time_num++;
+    sprintf(say_time_files[say_time_num], "MINUTES.WAV");
+    say_time_num++;
+  }
+  else if( m2 == 1 )
+  {
+    // минут
+    sprintf(say_time_files[say_time_num], "MINUTES.WAV");
+    say_time_num++;
+  }
+  else
+  {
+    if( m3 == 1 ) {
+      // минута 
+      sprintf(say_time_files[say_time_num], "MINUTE.WAV");
+      say_time_num++;
+    }
+     else if( m3 >= 2 && m3 <= 4 ) {
+       // минуты 
+        sprintf(say_time_files[say_time_num], "MINUTE-I.WAV");
+        say_time_num++;
+     }
+     else {
+      // минут
+      sprintf(say_time_files[say_time_num], "MINUTES.WAV");
+      say_time_num++;
+    }
+  }
 }
