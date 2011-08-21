@@ -500,9 +500,6 @@ void sayTime() {
    m1 = minutes/10 - (minutes/100)*10;
    m2 = minutes/1 - (minutes/10)*10;
 
-   char filename[12];
-   sprintf(filename, "VREMJA.WAV");   
-   playfile(filename);
    sayDigits(h1,h2,3);
    sayHours(h1,h2);
    sayDigits(m1,m2,2);
@@ -518,16 +515,20 @@ void sayDigits(int m2, int m3, int flag) {
   }
   else if( m2 == 0 || m2 > 1 )
   {
+    if (m2 > 0) {
       sprintf(filename, "%d0.WAV", m2);   
       playfile(filename);
+    }
+    if (m3 > 0) {
       sprintf(filename, "%d%s.WAV", m3, (flag==2 && (m3==1 || m3==2))?"F":"");
       playfile(filename);
+    }
   }
   else if( m2 == 1 )
   {
     sprintf(filename, "%d.WAV", m3+10);
     playfile(filename);
-  }    
+  }
 }
 
 void sayHours(int m2, int m3) {
