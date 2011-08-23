@@ -396,11 +396,6 @@ void processSounds() {
       // and say time after that
       if (minutes == 0) {
 
-        // say Nikita sound
-        char filename[12];
-        sprintf(filename, "NIK_%d.WAV", hours);
-        playfile(filename);
-
         // play coocoo N times
         int times = hours;
         if(times > 12) {
@@ -410,20 +405,26 @@ void processSounds() {
            playfile(file_kuku);
            times--;
         }
+
+        // say Nikita sound
+        char filename[12];
+        sprintf(filename, "NIK_%d.WAV", hours);
+        playfile(filename);
+
         
         // say time, finally
-        sayTime();
+        // sayTime();
      
      } 
-     // every 15 minutes play chime
-     else if (hours < 21 && minutes % 15 == 0) {
+     // every 30 minutes play chime
+     else if (hours < 21 && minutes % 30 == 0) {
        // play chime
        playfile(file_chime);
         // say time, finally
-        sayTime();
+        // sayTime();
      } else if (minutes % 5 == 0) {
         // say time every 5 minutes
-        sayTime();
+        // sayTime();
      }
   }
 }
